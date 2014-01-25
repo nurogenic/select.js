@@ -1,0 +1,7 @@
+* 															{box-sizing:border-box;}
+.select-container											{display: block; width: 30%; margin-bottom: 10px;}
+.select-container .styled-select-active						{padding: 10px 10px; border: 1px solid #333; width: 100%; display: block;}
+.select-container .styled-select-active:hover				{cursor: pointer;}
+.select-container ul.select-container-options-list			{list-style: none; padding:0px; margin:0px; border: 1px solid #999; display: block; width: 100%; display: none;}
+.select-container ul.select-container-options-list li		{padding: 10px 10px; border-bottom: 1px solid #ddd; width: 100%;}
+.select-container ul.select-container-options-list li:hover	{background: #f2f2f2; cursor: pointer;}
