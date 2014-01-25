@@ -1,7 +1,7 @@
 ;(function($, w, d, undefined){
 
 	$(function(){
-		don.StyledSelectInit();
+		don.StyledSelectInit('.styleThis');
 		don.globalEvents();
 	});
 
@@ -16,12 +16,26 @@
 			}
 		},
 
-		StyledSelectInit : function(){
-			this.selectsArray = $('body').find('select');
-			var i = 0,
-				l = this.selectsArray.length;
-			for ( i; i<l; i++ ){
-				new this.StyledSelect(this.selectsArray[i], this.defaults, i);
+		StyledSelectInit : function(arg){
+			if(arg === 'all' || arg === 'All' || arg === 'ALL'){
+				this.selectsArray = $('body').find('select');
+				var i = 0,
+					l = this.selectsArray.length;
+				for ( i; i<l; i++ ){
+					new this.StyledSelect(this.selectsArray[i], this.defaults, i);
+				}
+			} else if( arg.substr(0,1) === '.' || arg.substr(0,1) === '#'){
+				var el = $(arg);
+				if(el.length > 1){
+					var i = 0,
+					l = el.length;
+					for ( i; i<l; i++ ){
+						new this.StyledSelect(el.eq(i), this.defaults, i);
+					}
+				} else {
+					new this.StyledSelect(arg, this.defaults, 0);	
+				}
+				
 			}
 		},
 
