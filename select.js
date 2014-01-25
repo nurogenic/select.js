@@ -1,7 +1,7 @@
 ;(function($, w, d, undefined){
 
 	$(function(){
-		don.StyledSelectInit('.styleThis');
+		don.StyledSelectInit('.dontStyleThis');
 		don.globalEvents();
 	});
 
@@ -17,14 +17,13 @@
 		},
 
 		StyledSelectInit : function(arg){
-			if(arg === 'all' || arg === 'All' || arg === 'ALL'){
-				this.selectsArray = $('body').find('select');
-				var i = 0,
-					l = this.selectsArray.length;
-				for ( i; i<l; i++ ){
-					new this.StyledSelect(this.selectsArray[i], this.defaults, i);
-				}
-			} else if( arg.substr(0,1) === '.' || arg.substr(0,1) === '#'){
+			this.arg = arg;
+
+			if(!arg){
+				arg = '';
+			}
+
+			if( arg.substr(0,1) === '.' || arg.substr(0,1) === '#'){
 				var el = $(arg);
 				if(el.length > 1){
 					var i = 0,
@@ -36,19 +35,22 @@
 					new this.StyledSelect(arg, this.defaults, 0);	
 				}
 				
+			} else{
+				this.selectsArray = $('body').find('select');
+				var i = 0,
+					l = this.selectsArray.length;
+				for ( i; i<l; i++ ){
+					new this.StyledSelect(this.selectsArray[i], this.defaults, i);
+				}
 			}
 		},
 
 		StyledSelectDestroy : function(){
-			var self = this;
-			this.selectsArray.each(function(){
 				var $this = $(this);
-				$this.show();
-				$this.unwrap();
-				$('.'+self.defaults.activeElClass+'').remove();
-				$('.'+self.defaults.optionsListClass+'').remove();
-				
-			});
+				$(this.arg).show();
+				$(this.arg).unwrap();
+				$('.'+this.defaults.activeElClass+'').remove();
+				$('.'+this.defaults.optionsListClass+'').remove();
 		},
 
 		globalEvents : function(){
@@ -82,150 +84,150 @@
 
 	don.StyledSelect.prototype = {
 
-			events : function(obj){
-				var self = obj;
-				$(this.activeItem).on('click', function(){
+		events : function(obj){
+			var self = obj;
+			$(this.activeItem).on('click', function(){
 
-					if(!self.optionsList.hasClass('active')){
-						self.optionsList.show();
-						self.optionsList.addClass('active');
-					} else {
-						self.optionsList.hide();
-						self.optionsList.removeClass('active');
-					}
-					
-				});
-
-				$(this.optionsList).on('click', 'li', function(){
-					var $this = $(this);
-					self.optionsList.removeClass('active').hide();
-					if($this.attr('value') != self.activeItem.attr('value')){
-						$(window).trigger('select-option-changed');	
-					}
-					self.setActiveItem($this);
-					
-				});
-			},
-
-			createContainer : function(obj, select){
-				var selectContainer = $('<div class="'+this.defaults.containerClass+'" id="'+this.selectID+'"></div>');
-				$(select).wrap(selectContainer);
-				$(select).hide();
-
-				return selectContainer;
-			},
-
-			getOptionsArray : function(obj, select) {
-				var thisOptionsArray = [];
-				$(select).children('option').each(function(i){
-					var thisOption = {};
-					$this = $(this)
-					
-					if($this.attr('id'))
-						thisOption.id = $this.attr('id');
-
-					if($this.attr('class'))
-						thisOption.class = $this.attr('class');
-
-					if($this.attr('value'))
-						thisOption.value = $this.attr('value');
-
-					if($this.html())
-						thisOption.content = $this.html();
-
-					if($this.attr('selected'))
-						thisOption.selected = $this.attr('selected');
-
-					thisOptionsArray.push(thisOption);
-				});
-				return thisOptionsArray;
-			},
-
-			setOptionsList : function(obj, optionsArray){
-				var optionsList = $('<ul>')
-									.addClass(this.defaults.optionsListClass)
-									.prependTo('#'+this.selectID+'');
-
-				var	i = 0,
-					l = optionsArray.length;
-
-				for( i; i<l; i++ ){
-					var thisListItem = $('<li>')
-
-					$this = optionsArray[i];
-					if($this.id)
-						thisListItem.attr('id', $this.id);
-
-					if($this.class)
-						thisListItem.addClass($this.class);
-
-					if($this.value)
-						thisListItem.attr('value', $this.value);
-
-					if($this.content)
-						thisListItem.html($this.content);
-
-					if($this.selected)
-						thisListItem.attr('selected', $this.selected);
-
-
-					thisListItem.appendTo(optionsList);
+				if(!self.optionsList.hasClass('active')){
+					self.optionsList.show();
+					self.optionsList.addClass('active');
+				} else {
+					self.optionsList.hide();
+					self.optionsList.removeClass('active');
 				}
+				
+			});
 
-				return optionsList;
-			},
-
-			getActiveItem : function(obj){
-				var i = 0,
-					l = this.optionsArray.length;
-
-				var activeElement = $('<span>')
-										.addClass(this.defaults.activeElClass);
-
-				var hasSelected = false;
-
-				for(i; i<l; i++){
-					if(this.optionsArray[i].selected){
-
-						hasSelected = true;
-
-						activeElement.html(this.optionsArray[i].content);
-
-						if(this.optionsArray[i].value)
-							activeElement.attr('value', this.optionsArray[i].value);
-
-						if(this.optionsArray[i].id)
-							activeElement.attr('id', this.optionsArray[i].id);
-
-						if(this.optionsArray[i].class)
-							activeElement.addClass(this.optionsArray[i].class);
-					}
+			$(this.optionsList).on('click', 'li', function(){
+				var $this = $(this);
+				self.optionsList.removeClass('active').hide();
+				if($this.attr('value') != self.activeItem.attr('value')){
+					$(window).trigger('select-option-changed');	
 				}
+				self.setActiveItem($this);
+				
+			});
+		},
+
+		createContainer : function(obj, select){
+			var selectContainer = $('<div class="'+this.defaults.containerClass+'" id="'+this.selectID+'"></div>');
+			$(select).wrap(selectContainer);
+			$(select).hide();
+
+			return selectContainer;
+		},
+
+		getOptionsArray : function(obj, select) {
+			var thisOptionsArray = [];
+			$(select).children('option').each(function(i){
+				var thisOption = {};
+				$this = $(this)
+				
+				if($this.attr('id'))
+					thisOption.id = $this.attr('id');
+
+				if($this.attr('class'))
+					thisOption.class = $this.attr('class');
+
+				if($this.attr('value'))
+					thisOption.value = $this.attr('value');
+
+				if($this.html())
+					thisOption.content = $this.html();
+
+				if($this.attr('selected'))
+					thisOption.selected = $this.attr('selected');
+
+				thisOptionsArray.push(thisOption);
+			});
+			return thisOptionsArray;
+		},
+
+		setOptionsList : function(obj, optionsArray){
+			var optionsList = $('<ul>')
+								.addClass(this.defaults.optionsListClass)
+								.prependTo('#'+this.selectID+'');
+
+			var	i = 0,
+				l = optionsArray.length;
+
+			for( i; i<l; i++ ){
+				var thisListItem = $('<li>')
+
+				$this = optionsArray[i];
+				if($this.id)
+					thisListItem.attr('id', $this.id);
+
+				if($this.class)
+					thisListItem.addClass($this.class);
+
+				if($this.value)
+					thisListItem.attr('value', $this.value);
+
+				if($this.content)
+					thisListItem.html($this.content);
+
+				if($this.selected)
+					thisListItem.attr('selected', $this.selected);
 
 
-				if(!hasSelected)
-					activeElement.html(this.optionsArray[0].content);
-
-
-				activeElement.prependTo('#'+this.selectID+'');
-
-				return activeElement;
-			},
-
-			setActiveItem : function(el){
-				var content = el.html();
-				var value = el.attr('value');
-
-				this.activeItem.html(content).attr('value', value);
-
-				$(this.origSelect).children('option').each(function(){
-					var $this = $(this);
-					$this.removeAttr('selected');
-					if($this.attr('value') === value ){
-						$this.attr('selected', 'selected');
-					}
-				});
+				thisListItem.appendTo(optionsList);
 			}
+
+			return optionsList;
+		},
+
+		getActiveItem : function(obj){
+			var i = 0,
+				l = this.optionsArray.length;
+
+			var activeElement = $('<span>')
+									.addClass(this.defaults.activeElClass);
+
+			var hasSelected = false;
+
+			for(i; i<l; i++){
+				if(this.optionsArray[i].selected){
+
+					hasSelected = true;
+
+					activeElement.html(this.optionsArray[i].content);
+
+					if(this.optionsArray[i].value)
+						activeElement.attr('value', this.optionsArray[i].value);
+
+					if(this.optionsArray[i].id)
+						activeElement.attr('id', this.optionsArray[i].id);
+
+					if(this.optionsArray[i].class)
+						activeElement.addClass(this.optionsArray[i].class);
+				}
+			}
+
+
+			if(!hasSelected)
+				activeElement.html(this.optionsArray[0].content);
+
+
+			activeElement.prependTo('#'+this.selectID+'');
+
+			return activeElement;
+		},
+
+		setActiveItem : function(el){
+			var content = el.html();
+			var value = el.attr('value');
+
+			this.activeItem.html(content).attr('value', value);
+
+			$(this.origSelect).children('option').each(function(){
+				var $this = $(this);
+				$this.removeAttr('selected');
+				if($this.attr('value') === value ){
+					$this.attr('selected', 'selected');
+				}
+			});
+		}
 	};
 
 })(jQuery, window, document);
