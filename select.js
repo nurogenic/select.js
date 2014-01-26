@@ -1,7 +1,7 @@
 ;(function($, w, d, undefined){
 
 	$(function(){
-		don.StyledSelectInit('.dontStyleThis');
+		don.StyledSelectInit('.styleThis');
 		don.globalEvents();
 	});
 
@@ -16,41 +16,69 @@
 			}
 		},
 
+		isInitialized : function(obj){
+			$this = $(obj);
+			if($this.hasClass('initialized'))
+				return true;
+			else
+				return false;
+		},
+
 		StyledSelectInit : function(arg){
 			this.arg = arg;
-
+			
 			if(!arg){
-				arg = '';
+				this.arg = '';
 			}
 
-			if( arg.substr(0,1) === '.' || arg.substr(0,1) === '#'){
+			if( this.arg.substr(0,1) === '.' || this.arg.substr(0,1) === '#'){
 				var el = $(arg);
 				if(el.length > 1){
 					var i = 0,
 					l = el.length;
 					for ( i; i<l; i++ ){
-						new this.StyledSelect(el.eq(i), this.defaults, i);
+						var isInit = this.isInitialized(el.eq(i));
+						if(!isInit){
+							new this.StyledSelect(el.eq(i), this.defaults, i);
+						}
 					}
 				} else {
 					new this.StyledSelect(arg, this.defaults, 0);	
 				}
 				
 			} else{
-				this.selectsArray = $('body').find('select');
+				this.arg = $('body').find('select');
 				var i = 0,
-					l = this.selectsArray.length;
+					l = this.arg.length;
 				for ( i; i<l; i++ ){
-					new this.StyledSelect(this.selectsArray[i], this.defaults, i);
+					var isInit = this.isInitialized(this.arg[i]);
+					if(!isInit){
+						new this.StyledSelect(this.arg[i], this.defaults, i);
+					}
 				}
 			}
 		},
 
 		StyledSelectDestroy : function(){
-				var $this = $(this);
-				$(this.arg).show();
-				$(this.arg).unwrap();
-				$('.'+this.defaults.activeElClass+'').remove();
-				$('.'+this.defaults.optionsListClass+'').remove();
+				var $this = this.arg,
+					self = this;
+
+				if(typeof $this === 'object'){
+					$this.each(function(i){
+						self.isInitialized(this);
+						$(this).removeClass('initialized').show();
+						$(this).unwrap();
+						$('.'+self.defaults.activeElClass+'').remove();
+						$('.'+self.defaults.optionsListClass+'').remove();
+					});
+				} else {
+					this.isInitialized($this);
+					$(this.arg).removeClass('initialized').show();
+					$(this.arg).unwrap();
+					$('.'+this.defaults.activeElClass+'').remove();
+					$('.'+this.defaults.optionsListClass+'').remove();
+				}
+				
 		},
 
 		globalEvents : function(){
@@ -112,7 +140,7 @@
 		createContainer : function(obj, select){
 			var selectContainer = $('<div class="'+this.defaults.containerClass+'" id="'+this.selectID+'"></div>');
 			$(select).wrap(selectContainer);
-			$(select).hide();
+			$(select).addClass('initialized').hide();
 
 			return selectContainer;
 		},
