@@ -45,7 +45,6 @@
 				} else {
 					new this.StyledSelect(arg, this.defaults, 0);	
 				}
-				
 			} else{
 				this.arg = $('body').find('select');
 				var i = 0,
@@ -60,25 +59,23 @@
 		},
 
 		StyledSelectDestroy : function(){
-				var $this = this.arg,
-					self = this;
+			var $this = this.arg,
+				self = this;
 
-				if(typeof $this === 'object'){
-					$this.each(function(i){
-						self.isInitialized(this);
-						$(this).removeClass('initialized').show();
-						$(this).unwrap();
-						$('.'+self.defaults.activeElClass+'').remove();
-						$('.'+self.defaults.optionsListClass+'').remove();
-					});
-				} else {
-					this.isInitialized($this);
-					$(this.arg).removeClass('initialized').show();
-					$(this.arg).unwrap();
-					$('.'+this.defaults.activeElClass+'').remove();
-					$('.'+this.defaults.optionsListClass+'').remove();
-				}
-				
+			if(typeof $this === 'object'){
+				$this.each(function(i){
+					self.isInitialized(this);
+					$(this).removeClass('initialized').show();
+					$(this).unwrap();
+				});
+			} else {
+				this.isInitialized($this);
+				$(this.arg).removeClass('initialized').show();
+				$(this.arg).unwrap();
+			}
+
+			$('.'+self.defaults.activeElClass+'').remove();
+			$('.'+self.defaults.optionsListClass+'').remove();
 		},
 
 		globalEvents : function(){
@@ -101,7 +98,7 @@
 		StyledSelect : function(selectObj, options, i){
 			this.defaults = options;
 			this.origSelect = selectObj;
-			this.selectID = 'styled-select-'+i;
+			this.selectID = this.getStyledSelectID(i);
 			this.selectContainer = this.createContainer(self, selectObj);
 			this.optionsArray = this.getOptionsArray(self, selectObj);
 			this.optionsList = this.setOptionsList(self, this.optionsArray);
@@ -114,19 +111,18 @@
 
 		events : function(obj){
 			var self = obj;
-			$(this.activeItem).on('click', function(){
-
+			$(this.activeItem).on('click.activeItem', function(){
 				if(!self.optionsList.hasClass('active')){
+					$('.'+self.defaults.optionsListClass+'').hide();
 					self.optionsList.show();
 					self.optionsList.addClass('active');
 				} else {
 					self.optionsList.hide();
 					self.optionsList.removeClass('active');
 				}
-				
 			});
 
-			$(this.optionsList).on('click', 'li', function(){
+			$(this.optionsList).on('click.optionsList', 'li', function(){
 				var $this = $(this);
 				self.optionsList.removeClass('active').hide();
 				if($this.attr('value') != self.activeItem.attr('value')){
@@ -143,6 +139,15 @@
 			$(select).addClass('initialized').hide();
 
 			return selectContainer;
+		},
+
+		getStyledSelectID : function(i){
+			$this = $('#styled-select-'+i).length;
+			if($this){
+				i++;
+				this.getStyledSelectID(i);
+			}
+			return 'styled-select-'+i;
 		},
 
 		getOptionsArray : function(obj, select) {
