@@ -4,55 +4,87 @@
 
 		w.selectArr = [];
 
-		$('.dontStyleThis').each(function(index, el){
+		$('.styleThis').each(function(index, el){
 			selectArr.push( new don.StyledSelect(el) );
-		});
-		
+		});	
 	});
 
+
+	// Namespacing
 	w.don = w.don || {};
 
+	/*
+	*	StyledSelect will take a jQuery select object and wrap it
+	*	to give it custom functionality.
+	*
+	*	@param {obj, obj} - jQuery Select ELement Object, Options Object
+	*	@return {obj} -  Instance of StyledSelect
+	*/
 	don.StyledSelect = function(el, opt){
 
 		var defaults = {
-			containerClass : 'select-container',
-			optionsListClass : 'select-container-options-list',
-			activeElClass : 'styled-select-active',
-			onChangeCallback : function(e){
-				// Do Something on Select Change
+			containerClass : 'select-container', 				// Class to be added to wrapper container that wraps the old select element as well as the new active element and list options
+			optionsListClass : 'select-container-options-list', // Class to be added to the ul that wrapps the options
+			activeElClass : 'styled-select-active', 			// Class to be added to the active element (Option that is currently selected)
+			onChangeCallback : function(e){ 					// Function will fire anytime an option is changed
+				// Do something on value change.
 			}
 		}
 
 		var options = $.extend(defaults, opt);
 
 		if( el instanceof HTMLElement ){
-			this.init(el, options);
+			return this.init(el, options);
 		}
 	};
 
+
+	//Writing all methods on the StyledSelect prototype to improve memory performance
 	don.StyledSelect.prototype = {
 
+		/*
+		*	Initialize the object with the specified options.
+		*	@param {obj, obj} - jQuery Select ELement Object, Options Object
+		*	@return {obj} -  Instance of StyledSelect
+		*/
 		init : function(selectObj, options){
+
+			// Cache this objects attributes
 			this.options 			= options;
 			this.origSelect 		= selectObj;
-			this.selectContainer 	= this.createContainer(self, selectObj);
-			this.optionsArray 		= this.getOptionsArray(self, selectObj);
-			this.optionsList 		= this.setOptionsList(self, this.optionsArray);
-			this.activeItem 		= this.getActiveItem(self);
+			this.selectContainer 	= this.createContainer();
+			this.optionsArray 		= this.getOptionsArray();
+			this.optionsList 		= this.setOptionsList();
+			this.activeItem 		= this.getActiveItem();
+
 			this.events(this);
+
 			return this;
 		},
 
+		// Unwrap the original select from the custom container and remove all
+		// options associated with this object.
 		destroy : function(){
-			var $el = $(this.origSelect) || '';
+			var $el = $(this.origSelect);
 
 			$el.insertBefore(this.selectContainer).removeClass('initialized').show();
 			this.selectContainer.remove();
+
+			delete this.options,
+			delete this.origSelect,
+			delete this.selectContainer,
+			delete this. optionsArray,
+			delete this.optionsList,
+			delete this.activeItem;
 		},
 
+		// Adding behavioral events to each object
 		events : function(){
 			var self = this;
 
+
+			// When the Custom Select is clicked it will check to see if this is active
+			// or not and will hide or show based on the result.
 			$(this.activeItem).on('click.activeItem', function(){
 
 				if(!self.optionsList.hasClass('active')){
@@ -67,24 +99,26 @@
 					self.optionsList.removeClass('active');
 
 				}
-
 			});
 
-			$(this.optionsList).on('click.optionsList', 'li', function(){
+			// When an option is clicked this will hide the list and update the
+			//ActiveElement. If the value of the previous active element differs from
+			//the new value then a custom event will trigger.
+			$(this.optionsList).on('click.optionsList', 'li', function(e){
 
 				var $this = $(this);
 				self.optionsList.removeClass('active').hide();
 
 				if($this.attr('value') != self.activeItem.attr('value')){
-
-					$(window).trigger('select-option-changed');
-
+					self.options.onChangeCallback(e);
 				}
 
 				self.setActiveItem($this);
-
 			});
 
+			// If there is a click on the document that is outside of the CustomSelect
+			// element then the custom select options will close to simulate the default
+			// browser select.
 			$(d).children().on('click', function(e){
 				var $this = $(e.target);
 				if($this.parents().hasClass(self.options.containerClass)){
@@ -93,20 +127,13 @@
 					$('.'+self.options.optionsListClass+'.active').removeClass('active').hide();
 				}
 			});
-
-			$(w).bind('select-option-changed', function(e){
-				self.options.onChangeCallback(e);
-			});	
 		},
 
-		isInitialized : function(obj){
-			$this = $(obj);
-			if($this.hasClass('initialized'))
-				return true;
-			else
-				return false;
-		},
-
+		/*
+		*	Creates/Inserts the new wrapping container and wraps the original select element in it.
+		*
+		*	@return {SelectContainer obj}
+		*/
 		createContainer : function(){
 			var selectContainer = $('<div class="'+this.options.containerClass+'"></div>');
 
@@ -119,6 +146,12 @@
 			return selectContainer;
 		},
 
+		/*
+		*	Gathers all the information on the options list from the original select object and stores
+		* 	it in an array. This will store options infromation like: id, class, value, & if is selected
+		*	
+		*	@return {Options Array}
+		*/
 		getOptionsArray : function() {
 			var thisOptionsArray = [];
 			$(this.origSelect).children('option').each(function(i){
@@ -145,6 +178,12 @@
 			return thisOptionsArray;
 		},
 
+		/*
+		*	Create <ul> and add options from original select to it as <li>. Id, Class, Value, & Selected
+		*	attributes will be added to the <li> as it were on the option.
+		*
+		*	@return {options list with list items}
+		*/
 		setOptionsList : function(){
 			var optionsList = $('<ul>').addClass(this.options.optionsListClass);
 
@@ -154,7 +193,7 @@
 			for( i; i<l; i++ ){
 				var thisListItem = $('<li>');
 
-				var li = optionsArray[i];
+				var li = this.optionsArray[i];
 				if(li.id)
 					thisListItem.attr('id', li.id);
 
@@ -175,11 +214,16 @@
 
 			this.selectContainer.prepend(optionsList);
 
-			console.log(this.selectContainer);
-
 			return optionsList;
 		},
 
+		/*
+		*	Creates a <span> withe the activeElClass provided in options checks to see which option is
+		*	selected and adds that to the span as the current selected option. If no option is selected
+		*	will use the first option in the array.
+		*
+		*	@return {active el}
+		*/
 		getActiveItem : function(){
 			var i = 0,
 				l = this.optionsArray.length;
@@ -217,6 +261,9 @@
 			return activeElement;
 		},
 
+		/*
+		*	Used in this.events() to add the clicked list item as the selected option and active element
+		*/
 		setActiveItem : function(el){
 
 			var content = el.html();
