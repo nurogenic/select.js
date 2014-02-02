@@ -1,15 +1,5 @@
 ;(function($, w, d, undefined){
 
-	$(function(){
-
-		w.selectArr = [];
-
-		$('.styleThis').each(function(index, el){
-			selectArr.push( new don.StyledSelect(el) );
-		});	
-	});
-
-
 	// Namespacing
 	w.don = w.don || {};
 
@@ -33,7 +23,9 @@
 
 		var options = $.extend(defaults, opt);
 
-		if( el instanceof HTMLElement ){
+
+		if( el instanceof HTMLElement || el instanceof jQuery ){
+			console.log(el);
 			return this.init(el, options);
 		}
 	};
