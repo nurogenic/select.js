@@ -1,19 +1,102 @@
 ;(function($, w, d, undefined){
 
 	$(function(){
-		don.StyledSelectInit('.styleThis');
-		don.globalEvents();
+
+		w.selectArr = [];
+
+		$('.dontStyleThis').each(function(index, el){
+			selectArr.push( new don.StyledSelect(el) );
+		});
+		
 	});
 
-	don = {
+	w.don = w.don || {};
 
-		defaults : {
+	don.StyledSelect = function(el, opt){
+
+		var defaults = {
 			containerClass : 'select-container',
 			optionsListClass : 'select-container-options-list',
 			activeElClass : 'styled-select-active',
 			onChangeCallback : function(e){
 				// Do Something on Select Change
 			}
+		}
+
+		var options = $.extend(defaults, opt);
+
+		if( el instanceof HTMLElement ){
+			this.init(el, options);
+		}
+	};
+
+	don.StyledSelect.prototype = {
+
+		init : function(selectObj, options){
+			this.options 			= options;
+			this.origSelect 		= selectObj;
+			this.selectContainer 	= this.createContainer(self, selectObj);
+			this.optionsArray 		= this.getOptionsArray(self, selectObj);
+			this.optionsList 		= this.setOptionsList(self, this.optionsArray);
+			this.activeItem 		= this.getActiveItem(self);
+			this.events(this);
+			return this;
+		},
+
+		destroy : function(){
+			var $el = $(this.origSelect) || '';
+
+			$el.insertBefore(this.selectContainer).removeClass('initialized').show();
+			this.selectContainer.remove();
+		},
+
+		events : function(){
+			var self = this;
+
+			$(this.activeItem).on('click.activeItem', function(){
+
+				if(!self.optionsList.hasClass('active')){
+
+					$('.'+self.options.optionsListClass+'').hide();
+					self.optionsList.show();
+					self.optionsList.addClass('active');
+
+				} else {
+
+					self.optionsList.hide();
+					self.optionsList.removeClass('active');
+
+				}
+
+			});
+
+			$(this.optionsList).on('click.optionsList', 'li', function(){
+
+				var $this = $(this);
+				self.optionsList.removeClass('active').hide();
+
+				if($this.attr('value') != self.activeItem.attr('value')){
+
+					$(window).trigger('select-option-changed');
+
+				}
+
+				self.setActiveItem($this);
+
+			});
+
+			$(d).children().on('click', function(e){
+				var $this = $(e.target);
+				if($this.parents().hasClass(self.options.containerClass)){
+					e.preventDefault();
+				} else {
+					$('.'+self.options.optionsListClass+'.active').removeClass('active').hide();
+				}
+			});
+
+			$(w).bind('select-option-changed', function(e){
+				self.options.onChangeCallback(e);
+			});	
 		},
 
 		isInitialized : function(obj){
@@ -24,135 +107,21 @@
 				return false;
 		},
 
-		StyledSelectInit : function(arg){
-			this.arg = arg;
-			
-			if(!arg){
-				this.arg = '';
-			}
+		createContainer : function(){
+			var selectContainer = $('<div class="'+this.options.containerClass+'"></div>');
 
-			if( this.arg.substr(0,1) === '.' || this.arg.substr(0,1) === '#'){
-				var el = $(arg);
-				if(el.length > 1){
-					var i = 0,
-					l = el.length;
-					for ( i; i<l; i++ ){
-						var isInit = this.isInitialized(el.eq(i));
-						if(!isInit){
-							new this.StyledSelect(el.eq(i), this.defaults, i);
-						}
-					}
-				} else {
-					new this.StyledSelect(arg, this.defaults, 0);	
-				}
-			} else{
-				this.arg = $('body').find('select');
-				var i = 0,
-					l = this.arg.length;
-				for ( i; i<l; i++ ){
-					var isInit = this.isInitialized(this.arg[i]);
-					if(!isInit){
-						new this.StyledSelect(this.arg[i], this.defaults, i);
-					}
-				}
-			}
-		},
+			var el = $(this.origSelect).addClass('initialized').hide();
 
-		StyledSelectDestroy : function(){
-			var $this = this.arg,
-				self = this;
+			selectContainer.insertBefore(el);
 
-			if(typeof $this === 'object'){
-				$this.each(function(i){
-					self.isInitialized(this);
-					$(this).removeClass('initialized').show();
-					$(this).unwrap();
-				});
-			} else {
-				this.isInitialized($this);
-				$(this.arg).removeClass('initialized').show();
-				$(this.arg).unwrap();
-			}
-
-			$('.'+self.defaults.activeElClass+'').remove();
-			$('.'+self.defaults.optionsListClass+'').remove();
-		},
-
-		globalEvents : function(){
-			var self = this;
-			$(d).children().on('click', function(e){
-				var $this = $(e.target);
-				
-				if($this.parents().hasClass(self.defaults.containerClass)){
-					e.preventDefault();
-				} else {
-					$('.'+self.defaults.optionsListClass+'.active').removeClass('active').hide();
-				}
-			});
-
-			$(w).bind('select-option-changed', function(e){
-				self.defaults.onChangeCallback(e);
-			});
-		},
-
-		StyledSelect : function(selectObj, options, i){
-			this.defaults = options;
-			this.origSelect = selectObj;
-			this.selectID = this.getStyledSelectID(i);
-			this.selectContainer = this.createContainer(self, selectObj);
-			this.optionsArray = this.getOptionsArray(self, selectObj);
-			this.optionsList = this.setOptionsList(self, this.optionsArray);
-			this.activeItem = this.getActiveItem(self);
-			this.events(this);
-		}
-	};
-
-	don.StyledSelect.prototype = {
-
-		events : function(obj){
-			var self = obj;
-			$(this.activeItem).on('click.activeItem', function(){
-				if(!self.optionsList.hasClass('active')){
-					$('.'+self.defaults.optionsListClass+'').hide();
-					self.optionsList.show();
-					self.optionsList.addClass('active');
-				} else {
-					self.optionsList.hide();
-					self.optionsList.removeClass('active');
-				}
-			});
-
-			$(this.optionsList).on('click.optionsList', 'li', function(){
-				var $this = $(this);
-				self.optionsList.removeClass('active').hide();
-				if($this.attr('value') != self.activeItem.attr('value')){
-					$(window).trigger('select-option-changed');	
-				}
-				self.setActiveItem($this);
-				
-			});
-		},
-
-		createContainer : function(obj, select){
-			var selectContainer = $('<div class="'+this.defaults.containerClass+'" id="'+this.selectID+'"></div>');
-			$(select).wrap(selectContainer);
-			$(select).addClass('initialized').hide();
+			selectContainer.append(el);
 
 			return selectContainer;
 		},
 
-		getStyledSelectID : function(i){
-			$this = $('#styled-select-'+i).length;
-			if($this){
-				i++;
-				this.getStyledSelectID(i);
-			}
-			return 'styled-select-'+i;
-		},
-
-		getOptionsArray : function(obj, select) {
+		getOptionsArray : function() {
 			var thisOptionsArray = [];
-			$(select).children('option').each(function(i){
+			$(this.origSelect).children('option').each(function(i){
 				var thisOption = {};
 				$this = $(this)
 				
@@ -176,46 +145,47 @@
 			return thisOptionsArray;
 		},
 
-		setOptionsList : function(obj, optionsArray){
-			var optionsList = $('<ul>')
-								.addClass(this.defaults.optionsListClass)
-								.prependTo('#'+this.selectID+'');
+		setOptionsList : function(){
+			var optionsList = $('<ul>').addClass(this.options.optionsListClass);
 
 			var	i = 0,
-				l = optionsArray.length;
+				l = this.optionsArray.length;
 
 			for( i; i<l; i++ ){
-				var thisListItem = $('<li>')
+				var thisListItem = $('<li>');
 
-				$this = optionsArray[i];
-				if($this.id)
-					thisListItem.attr('id', $this.id);
+				var li = optionsArray[i];
+				if(li.id)
+					thisListItem.attr('id', li.id);
 
-				if($this.class)
-					thisListItem.addClass($this.class);
+				if(li.class)
+					thisListItem.addClass(li.class);
 
-				if($this.value)
-					thisListItem.attr('value', $this.value);
+				if(li.value)
+					thisListItem.attr('value', li.value);
 
-				if($this.content)
-					thisListItem.html($this.content);
+				if(li.content)
+					thisListItem.html(li.content);
 
-				if($this.selected)
-					thisListItem.attr('selected', $this.selected);
+				if(li.selected)
+					thisListItem.attr('selected', li.selected);
 
-
-				thisListItem.appendTo(optionsList);
+				optionsList.append(thisListItem);
 			}
+
+			this.selectContainer.prepend(optionsList);
+
+			console.log(this.selectContainer);
 
 			return optionsList;
 		},
 
-		getActiveItem : function(obj){
+		getActiveItem : function(){
 			var i = 0,
 				l = this.optionsArray.length;
 
 			var activeElement = $('<span>')
-									.addClass(this.defaults.activeElClass);
+									.addClass(this.options.activeElClass);
 
 			var hasSelected = false;
 
@@ -242,12 +212,13 @@
 				activeElement.html(this.optionsArray[0].content);
 
 
-			activeElement.prependTo('#'+this.selectID+'');
+			activeElement.prependTo(this.selectContainer);
 
 			return activeElement;
 		},
 
 		setActiveItem : function(el){
+
 			var content = el.html();
 			var value = el.attr('value');
 
